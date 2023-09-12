@@ -9,6 +9,12 @@ public class User {
 
     private String password;
 
+    private String confirmationCode;
+
+    public String getConfirmationCode() {
+        return confirmationCode;
+    }
+
     public String getPassword() {
         return password;
     }

@@ -4,12 +4,15 @@ import com.laurisseau.iotapi.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.laurisseau.iotapi.util.JwtUtil;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
 public class AuthenticationController {
 
+    @Autowired
+    private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationService service;
 
@@ -19,13 +22,22 @@ public class AuthenticationController {
         String email = user.getEmail();
         String userName = user.getUserName();
         String dataWebsite = "www.website";
-        String dataLink = "www.link/:jwt";
+        String dataLink = "www.link/" + jwtUtil.generateToken(email);
         String dataRole = "user";
         String password = user.getPassword();
 
         return new ResponseEntity<>(service.signUp(email,
                 userName, dataWebsite, dataLink, dataRole, password),
                 HttpStatus.OK);
+
     }
+
+    @PostMapping("/confirmEmail/{jwt}")
+    public String confirmEmail(@PathVariable String jwt, @RequestBody User user) {
+        String decodedEmail = jwtUtil.decodeEmail(jwt);
+        String confirmationCode = user.getConfirmationCode();
+        return service.confirmEmail(decodedEmail, confirmationCode);
+    }
+
 
 }

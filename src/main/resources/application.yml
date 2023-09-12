@@ -14,6 +14,8 @@ application:
   bucket:
     name: barber-shop-images
 
+jwt:
+  secret: 0DT9C2mblyWFvHUQLDLafZSBqIycGPw7M3ZFuZfhz4MoMTi2bkE3IIt4uaU2qQY6
 
 spring:
   servlet:
