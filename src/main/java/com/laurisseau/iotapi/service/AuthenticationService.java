@@ -8,6 +8,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ConfirmSignUpRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.SignUpRequest;
 
 import java.util.ArrayList;
@@ -82,10 +83,27 @@ public class AuthenticationService {
         }
 
     }
-    //
 
-    public String confirmEmail(){
-        return "email";
+    public String confirmEmail(String userName, String confirmationCode){
+
+        CognitoIdentityProviderClient identityProviderClient = CognitoIdentityProviderClient.builder()
+                .region(Region.US_EAST_1)
+                .credentialsProvider(ProfileCredentialsProvider.create())
+                .build();
+
+        ConfirmSignUpRequest req = ConfirmSignUpRequest.builder()
+                .clientId(clientId)
+                .confirmationCode(confirmationCode)
+                .username(userName)
+                .build();
+
+        identityProviderClient.confirmSignUp(req);
+
+        return "User " + userName + " sign up confirmed";
+    }
+
+    public String login(String userName, String password){
+        return "success";
     }
 
 }

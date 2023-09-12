@@ -19,7 +19,7 @@ public class AuthenticationController {
         String email = user.getEmail();
         String userName = user.getUserName();
         String dataWebsite = "www.website";
-        String dataLink = "www.link";
+        String dataLink = "www.link/:jwt";
         String dataRole = "user";
         String password = user.getPassword();
 
