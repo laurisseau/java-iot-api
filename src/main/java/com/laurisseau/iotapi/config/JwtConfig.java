@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class JwtConfig {
-
+//x
     @Value("${jwt.secret}")
     private static String jwtSecret;
 
