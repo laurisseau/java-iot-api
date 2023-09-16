@@ -6,27 +6,30 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.ConfirmSignUpRequest;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.SignUpRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AuthenticationService {
     private final String clientId;
+    private final String poolId;
 
     @Autowired
     public AuthenticationService(
-            @Value("${cloud.aws.credentials.cognito-client-id}") String clientId) {
+            @Value("${cloud.aws.credentials.cognito-client-id}") String clientId,
+            @Value("${cloud.aws.credentials.cognito-pool-id}") String poolId) {
         this.clientId = clientId;
+        this.poolId = poolId;
     }
 
+
     public String signUp(String email, String userName,
-                              String dataWebsite, String dataLink, String dataRole,
-                              String password){
+                         String dataWebsite, String dataLink, String dataRole,
+                         String password) {
 
         CognitoIdentityProviderClient identityProviderClient = CognitoIdentityProviderClient.builder()
                 .region(Region.US_EAST_1)
@@ -78,13 +81,13 @@ public class AuthenticationService {
             identityProviderClient.signUp(signUpRequest);
             return "User has been signed up";
 
-        } catch(CognitoIdentityProviderException e) {
+        } catch (CognitoIdentityProviderException e) {
             return e.awsErrorDetails().errorMessage();
         }
 
     }
 
-    public String confirmEmail(String userName, String confirmationCode){
+    public String confirmEmail(String userName, String confirmationCode) {
 
         CognitoIdentityProviderClient identityProviderClient = CognitoIdentityProviderClient.builder()
                 .region(Region.US_EAST_1)
@@ -102,8 +105,37 @@ public class AuthenticationService {
         return "User " + userName + " sign up confirmed";
     }
 
-    public String login(String userName, String password){
-        return "success";
+
+
+    public AdminInitiateAuthResponse login(String userName, String password) {
+        try {
+            Map<String,String> authParameters = new HashMap<>();
+            authParameters.put("USERNAME", userName);
+            authParameters.put("PASSWORD", password);
+
+            CognitoIdentityProviderClient identityProviderClient = CognitoIdentityProviderClient.builder()
+                    .region(Region.US_EAST_1)
+                    .credentialsProvider(ProfileCredentialsProvider.create())
+                    .build();
+
+            AdminInitiateAuthRequest authRequest = AdminInitiateAuthRequest.builder()
+                    .clientId(clientId)
+                    .userPoolId(poolId)
+                    .authParameters(authParameters)
+                    .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
+                    .build();
+
+            AdminInitiateAuthResponse response = identityProviderClient.adminInitiateAuth(authRequest);
+            System.out.println("Result Challenge is : " + response.challengeName() );
+            return response;
+
+        } catch(CognitoIdentityProviderException e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        }
+
+        return null;
     }
+
 
 }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.laurisseau.iotapi.util.JwtUtil;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthResponse;
 
 @RestController
 @RequestMapping("/user")
@@ -37,6 +38,14 @@ public class AuthenticationController {
         String decodedEmail = jwtUtil.decodeEmail(jwt);
         String confirmationCode = user.getConfirmationCode();
         return service.confirmEmail(decodedEmail, confirmationCode);
+    }
+
+    @PostMapping("/login")
+    public AdminInitiateAuthResponse login(@RequestBody User user) {
+        String userName = user.getUserName();
+        String password = user.getPassword();
+
+        return service.login(userName, password);
     }
 
 
