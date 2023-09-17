@@ -3,7 +3,10 @@ package com.laurisseau.iotapi.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
@@ -17,13 +20,20 @@ import java.util.Map;
 public class AuthenticationService {
     private final String clientId;
     private final String poolId;
+    private final String secretKey;
+    private final String accessKey;
+
 
     @Autowired
     public AuthenticationService(
+            @Value("${cloud.aws.credentials.cognito-access-key}") String accessKey,
+            @Value("${cloud.aws.credentials.cognito-secret-key}") String secretKey,
             @Value("${cloud.aws.credentials.cognito-client-id}") String clientId,
             @Value("${cloud.aws.credentials.cognito-pool-id}") String poolId) {
         this.clientId = clientId;
         this.poolId = poolId;
+        this.secretKey = secretKey;
+        this.accessKey = accessKey;
     }
 
 
@@ -107,34 +117,40 @@ public class AuthenticationService {
 
 
 
-    public AdminInitiateAuthResponse login(String userName, String password) {
+    public String login(String userName, String password) {
         try {
+
             Map<String,String> authParameters = new HashMap<>();
             authParameters.put("USERNAME", userName);
             authParameters.put("PASSWORD", password);
 
+            AwsCredentialsProvider awsCredentials = StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create(accessKey, secretKey)
+            );
+
             CognitoIdentityProviderClient identityProviderClient = CognitoIdentityProviderClient.builder()
                     .region(Region.US_EAST_1)
-                    .credentialsProvider(ProfileCredentialsProvider.create())
+                    .credentialsProvider(awsCredentials)
                     .build();
 
-            AdminInitiateAuthRequest authRequest = AdminInitiateAuthRequest.builder()
+            InitiateAuthRequest authRequest = InitiateAuthRequest.builder()
                     .clientId(clientId)
-                    .userPoolId(poolId)
                     .authParameters(authParameters)
-                    .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
+                    .authFlow(AuthFlowType.USER_PASSWORD_AUTH)
                     .build();
 
-            AdminInitiateAuthResponse response = identityProviderClient.adminInitiateAuth(authRequest);
-            System.out.println("Result Challenge is : " + response.challengeName() );
-            return response;
+            AuthenticationResultType authenticationResult = identityProviderClient.initiateAuth(authRequest).authenticationResult();
+
+            //System.out.println(authenticationResult.accessToken());
+            //System.out.println(authenticationResult.idToken());
+
+            return "Logged In";
 
         } catch(CognitoIdentityProviderException e) {
             System.err.println(e.awsErrorDetails().errorMessage());
-            System.exit(1);
+            return e.awsErrorDetails().errorMessage();
         }
 
-        return null;
     }
 
 
