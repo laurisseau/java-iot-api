@@ -19,7 +19,6 @@ import java.util.Map;
 @Service
 public class AuthenticationService {
     private final String clientId;
-    private final String poolId;
     private final String secretKey;
     private final String accessKey;
 
@@ -28,10 +27,8 @@ public class AuthenticationService {
     public AuthenticationService(
             @Value("${cloud.aws.credentials.cognito-access-key}") String accessKey,
             @Value("${cloud.aws.credentials.cognito-secret-key}") String secretKey,
-            @Value("${cloud.aws.credentials.cognito-client-id}") String clientId,
-            @Value("${cloud.aws.credentials.cognito-pool-id}") String poolId) {
+            @Value("${cloud.aws.credentials.cognito-client-id}") String clientId) {
         this.clientId = clientId;
-        this.poolId = poolId;
         this.secretKey = secretKey;
         this.accessKey = accessKey;
     }
@@ -141,8 +138,8 @@ public class AuthenticationService {
 
             AuthenticationResultType authenticationResult = identityProviderClient.initiateAuth(authRequest).authenticationResult();
 
-            //System.out.println(authenticationResult.accessToken());
-            //System.out.println(authenticationResult.idToken());
+            System.out.println(authenticationResult.accessToken());
+            System.out.println(authenticationResult.idToken());
 
             return "Logged In";
 
